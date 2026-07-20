@@ -3,6 +3,7 @@
 services:
   db:
     image: postgres:16
+    command: postgres -c log_min_duration_statement=200  # log slow statements (ms)
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app

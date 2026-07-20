@@ -64,6 +64,9 @@ Full spec with request/response shapes and error codes: [`docs/endpoints.md`](do
   handler emits and returns; the listener catches and logs its own failures.
 - **Validation at the boundary**: `ParseIntPipe` for ids, explicit ISO-date checks for the
   range — bad input fails fast with a clear `400`.
+- **Observability**: every request logged with status + latency; queries slower than
+  200ms warned app-side and logged db-side (`log_min_duration_statement`); 5s
+  `statement_timeout` on the pool; `db/explain.sql` for checking plans.
 
 ## Database (Postgres 16)
 
@@ -87,8 +90,11 @@ states. Structured as `components/`, `services/` (one typed `ApiService`), `type
 ## Suggested improvements (given more time)
 
 - Config via `.env` (DB credentials) instead of hardcoded compose values
+- Cursor (keyset) pagination for deep paging on large tables — offset pagination scans
+  past all skipped rows, while `WHERE (timestamp, id) > (last row)` stays O(limit) at
+  any depth on the existing indexes
 - Migrations (e.g. node-pg-migrate) instead of a single init.sql
-- Cursor pagination at deep offsets; partition automation (pg_partman) instead of the
-  manual yearly partition; a real queue (Redis/Kafka) instead of in-process events
-- Slow-query logging / statement timeouts / EXPLAIN ANALYZE in observability
+- Partition automation (pg_partman) instead of the manual yearly partition;
+  a real queue (Redis/Kafka) instead of in-process events for tracking under load
+- Metrics/tracing (Prometheus, OpenTelemetry) beyond the current log-based observability
 - Production Dockerfiles (multi-stage build, nginx for the frontend)
