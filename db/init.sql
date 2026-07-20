@@ -15,6 +15,13 @@ CREATE TABLE "heartRateReadings" (
   "heartRate" INT
 );
 
+-- request tracking (assignment endpoint 3), updated async via NestJS EventEmitter
+CREATE TABLE "patientRequestsAnalytics" (
+  "patientId"       INT PRIMARY KEY REFERENCES patients(id),
+  "requestCount"    INT NOT NULL DEFAULT 0,
+  "lastRequestedAt" TIMESTAMPTZ
+);
+
 INSERT INTO patients (id, name, age, gender) VALUES
   (1, 'Alice Johnson', 34, 'female'),
   (2, 'Bob Smith', 45, 'male');

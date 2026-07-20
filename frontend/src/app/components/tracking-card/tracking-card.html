@@ -1,0 +1,27 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Patient Request Tracking</mat-card-title>
+    <mat-card-subtitle>GET /api/patient/:id/tracking</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="fields">
+      <label>Patient id <input type="number" [(ngModel)]="patientId" min="1" /></label>
+    </div>
+
+    @if (loading()) {
+      <mat-spinner diameter="24" />
+    } @else if (error()) {
+      <p class="error">{{ error() }}</p>
+    } @else if (result(); as r) {
+      <p>
+        Analytics requested {{ r.requestCount }} time{{ r.requestCount === 1 ? '' : 's' }}
+        @if (r.lastRequestedAt) {
+          — last at {{ r.lastRequestedAt | date: 'medium' }}
+        }
+      </p>
+    }
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-raised-button (click)="load()" [disabled]="loading()">Get tracking</button>
+  </mat-card-actions>
+</mat-card>

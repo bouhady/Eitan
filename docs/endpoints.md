@@ -59,6 +59,36 @@ No readings in range → `count: 0` and `avg`/`min`/`max` are `null`.
 | `400`  | Non-numeric `id`, missing or invalid `from`/`to` |
 | `404`  | Patient id does not exist                   |
 
+## 3. Patient Request Tracking
+
+How many times a patient's analytics data has been requested. Every successful call to
+`/api/patient/:id/analytics` emits a `patient.analytics.requested` event (NestJS EventEmitter);
+an async listener (`TrackingService`) upserts the `"patientRequestsAnalytics"` table —
+tracking never blocks or fails the analytics request itself.
+
+```
+GET /api/patient/:id/tracking
+```
+
+**Response `200`**
+
+```json
+{
+  "patientId": 1,
+  "requestCount": 2,
+  "lastRequestedAt": "2026-07-20T15:10:00.000Z"
+}
+```
+
+Never requested → `requestCount: 0`, `lastRequestedAt: null`.
+
+**Errors**
+
+| Status | When                      |
+|--------|---------------------------|
+| `400`  | Non-numeric `id`          |
+| `404`  | Patient id does not exist |
+
 ## Example calls
 
 ```bash

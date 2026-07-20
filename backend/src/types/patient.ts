@@ -18,6 +18,12 @@ export interface HighHeartRateEvent {
   heartRate: number;
 }
 
+export interface PatientRequestTracking {
+  patientId: number;
+  requestCount: number;
+  lastRequestedAt: string | null;
+}
+
 export interface HeartRateAnalytics {
   patientId: number;
   from: string;
