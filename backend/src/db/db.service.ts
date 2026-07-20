@@ -8,8 +8,14 @@ export const SLOW_QUERY_MS = 200;
 @Injectable()
 export class DbService implements OnModuleDestroy {
   private readonly logger = new Logger(DbService.name);
-  // PGHOST/PGUSER/PGPASSWORD/PGDATABASE from env; statement_timeout kills runaway queries
-  private pool = new Pool({ statement_timeout: 5000 });
+  // PGHOST/PGUSER/PGPASSWORD/PGDATABASE from env; statement_timeout kills runaway queries.
+  // Pool size/timeouts tunable per environment.
+  private pool = new Pool({
+    statement_timeout: 5000,
+    max: Number(process.env.PGPOOL_MAX ?? 10),
+    idleTimeoutMillis: Number(process.env.PGPOOL_IDLE_TIMEOUT_MS ?? 30000),
+    connectionTimeoutMillis: Number(process.env.PGPOOL_CONNECT_TIMEOUT_MS ?? 5000),
+  });
 
   onModuleDestroy() {
     return this.pool.end(); // lets jest/e2e and graceful shutdown close cleanly

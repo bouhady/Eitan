@@ -1,33 +1,22 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../services/api.service';
 import { Patient } from '../../types/patient';
+import { PagedCard } from '../paged-card';
 
 @Component({
   selector: 'app-patients-card',
-  imports: [MatCardModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [FormsModule, MatCardModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './patients-card.html',
+  styleUrl: '../analytics-card/analytics-card.css',
 })
-export class PatientsCard {
+export class PatientsCard extends PagedCard<Patient> {
   private api = inject(ApiService);
-  protected readonly loading = signal(false);
-  protected readonly patients = signal<Patient[]>([]);
-  protected readonly error = signal(false);
 
-  load() {
-    this.loading.set(true);
-    this.error.set(false);
-    this.api.getPatients().subscribe({
-      next: (rows) => {
-        this.patients.set(rows);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set(true);
-        this.loading.set(false);
-      },
-    });
+  protected fetch(limit: number, offset: number) {
+    return this.api.getPatients(limit, offset);
   }
 }

@@ -14,6 +14,12 @@ List endpoints (`/patients`, `/heart-rate-readings`, `/api/high-heart-rate-event
 
 Invalid values → `400`. Ordering is stable (`timestamp, id`).
 
+List responses are wrapped in a pagination envelope:
+
+```json
+{ "items": [ ... ], "limit": 25, "offset": 0, "hasMore": true }
+```
+
 ## 1. High Heart Rate Events
 
 All heart rate readings exceeding the threshold (default **100 bpm**), across all patients.
@@ -27,10 +33,15 @@ GET /api/high-heart-rate-events?threshold=100&limit=25&offset=0
 **Response `200`**
 
 ```json
-[
-  { "patientId": 1, "timestamp": "2024-03-01T10:30:00.000Z", "heartRate": 101 },
-  { "patientId": 2, "timestamp": "2024-03-02T11:00:00.000Z", "heartRate": 105 }
-]
+{
+  "items": [
+    { "patientId": 1, "timestamp": "2024-03-01T10:30:00.000Z", "heartRate": 101 },
+    { "patientId": 2, "timestamp": "2024-03-02T11:00:00.000Z", "heartRate": 105 }
+  ],
+  "limit": 25,
+  "offset": 0,
+  "hasMore": false
+}
 ```
 
 The threshold is the `HIGH_HEART_RATE_THRESHOLD` constant (100) in `db.service.ts`.
@@ -69,7 +80,7 @@ No readings in range → `count: 0` and `avg`/`min`/`max` are `null`.
 
 | Status | When                                        |
 |--------|---------------------------------------------|
-| `400`  | Non-numeric `id`, missing or invalid `from`/`to`, `from > to`, or range longer than 365 days |
+| `400`  | Non-numeric `id`; missing or non-ISO-8601 `from`/`to`; `from > to`; range longer than 365 days |
 | `404`  | Patient id does not exist                   |
 
 ## 3. Patient Request Tracking

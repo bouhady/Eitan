@@ -13,6 +13,11 @@ services:
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro  # runs on first init
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d patients"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
 
   backend:
     image: node:22
@@ -24,7 +29,8 @@ services:
       PGPASSWORD: app
       PGDATABASE: patients
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - /app/node_modules   # keep container's linux node_modules, not host's

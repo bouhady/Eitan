@@ -26,16 +26,17 @@ describe('App (e2e)', () => {
     return request(app.getHttpServer()).get('/').expect(200).expect('Patients & Heart Rate Service');
   });
 
-  it('/patients (GET) returns seeded patients', async () => {
+  it('/patients (GET) returns seeded patients in a pagination envelope', async () => {
     const res = await request(app.getHttpServer()).get('/patients').expect(200);
-    expect(res.body.length).toBeGreaterThanOrEqual(2);
-    expect(res.body.map((p: { name: string }) => p.name)).toContain('Alice Johnson');
+    expect(res.body).toMatchObject({ limit: 25, offset: 0, hasMore: false });
+    expect(res.body.items.length).toBeGreaterThanOrEqual(2);
+    expect(res.body.items.map((p: { name: string }) => p.name)).toContain('Alice Johnson');
   });
 
   it('/api/high-heart-rate-events (GET) returns only readings above 100', async () => {
     const res = await request(app.getHttpServer()).get('/api/high-heart-rate-events').expect(200);
-    expect(res.body).toHaveLength(2);
-    for (const e of res.body as { heartRate: number }[]) {
+    expect(res.body.items).toHaveLength(2);
+    for (const e of res.body.items as { heartRate: number }[]) {
       expect(e.heartRate).toBeGreaterThan(100);
     }
   });
@@ -68,8 +69,8 @@ describe('App (e2e)', () => {
       .get('/api/high-heart-rate-events')
       .query({ threshold: 102 })
       .expect(200);
-    expect(res.body).toHaveLength(1);
-    expect(res.body[0].heartRate).toBe(105);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].heartRate).toBe(105);
   });
 
   it('/api/high-heart-rate-events rejects bad threshold and bad pagination', async () => {
@@ -77,12 +78,26 @@ describe('App (e2e)', () => {
     await request(app.getHttpServer()).get('/api/high-heart-rate-events').query({ limit: 101 }).expect(400);
   });
 
-  it('/heart-rate-readings paginates with limit and offset', async () => {
+  it('/heart-rate-readings paginates with limit/offset and reports hasMore', async () => {
     const res = await request(app.getHttpServer())
       .get('/heart-rate-readings')
       .query({ limit: 2, offset: 1 })
       .expect(200);
-    expect(res.body).toHaveLength(2);
+    expect(res.body.items).toHaveLength(2);
+    expect(res.body).toMatchObject({ limit: 2, offset: 1, hasMore: true }); // 6 seed rows
+
+    const lastPage = await request(app.getHttpServer())
+      .get('/heart-rate-readings')
+      .query({ limit: 100 })
+      .expect(200);
+    expect(lastPage.body.hasMore).toBe(false);
+  });
+
+  it('/api/patient/1/analytics rejects non-ISO date formats with 400', () => {
+    return request(app.getHttpServer())
+      .get('/api/patient/1/analytics')
+      .query({ from: '03/01/2024', to: '2024-03-02T00:00:00Z' })
+      .expect(400);
   });
 
   it('/api/patient/1/analytics rejects a range longer than 365 days with 400', () => {

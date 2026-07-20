@@ -15,3 +15,15 @@ export function parsePagination(limit?: string, offset?: string): { limit: numbe
   }
   return { limit: lim, offset: off };
 }
+
+export interface Paginated<T> {
+  items: T[];
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+/** Build the response envelope from limit+1 fetched rows. */
+export function paginate<T>(rows: T[], limit: number, offset: number): Paginated<T> {
+  return { items: rows.slice(0, limit), limit, offset, hasMore: rows.length > limit };
+}

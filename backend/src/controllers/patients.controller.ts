@@ -11,7 +11,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DbService, HIGH_HEART_RATE_THRESHOLD } from '../db/db.service';
 import { PATIENT_ANALYTICS_REQUESTED } from '../services/tracking.service';
 import { HeartRateAnalytics, HighHeartRateEvent, PatientRequestTracking } from '../types/patient';
-import { parsePagination } from './pagination';
+import { Paginated, paginate, parsePagination } from './pagination';
+import { assertIsoDate } from './validation';
 
 export const MAX_ANALYTICS_RANGE_DAYS = 365;
 
@@ -23,17 +24,18 @@ export class PatientsController {
   ) {}
 
   @Get('high-heart-rate-events')
-  getHighHeartRateEvents(
+  async getHighHeartRateEvents(
     @Query('threshold') threshold?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
-  ): Promise<HighHeartRateEvent[]> {
+  ): Promise<Paginated<HighHeartRateEvent>> {
     const t = threshold === undefined ? HIGH_HEART_RATE_THRESHOLD : Number(threshold);
     if (!Number.isFinite(t) || t < 0) {
       throw new BadRequestException('threshold must be a non-negative number');
     }
     const p = parsePagination(limit, offset);
-    return this.db.getHighHeartRateEvents(t, p.limit, p.offset);
+    const rows = await this.db.getHighHeartRateEvents(t, p.limit + 1, p.offset);
+    return paginate(rows, p.limit, p.offset);
   }
 
   @Get('patient/:id/analytics')
@@ -42,9 +44,8 @@ export class PatientsController {
     @Query('from') from: string,
     @Query('to') to: string,
   ): Promise<HeartRateAnalytics> {
-    if (!from || !to || isNaN(Date.parse(from)) || isNaN(Date.parse(to))) {
-      throw new BadRequestException('from and to must be valid ISO dates');
-    }
+    assertIsoDate(from, 'from');
+    assertIsoDate(to, 'to');
     if (Date.parse(from) > Date.parse(to)) {
       throw new BadRequestException('from must be earlier than or equal to to');
     }

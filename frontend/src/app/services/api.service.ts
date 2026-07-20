@@ -1,6 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Patient, HeartRateReading, HighHeartRateEvent, HeartRateAnalytics, PatientRequestTracking } from '../types/patient';
+import {
+  Paginated,
+  Patient,
+  HeartRateReading,
+  HighHeartRateEvent,
+  HeartRateAnalytics,
+  PatientRequestTracking,
+} from '../types/patient';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -12,16 +19,22 @@ export class ApiService {
     return this.http.get(`${this.base}/ping`, { responseType: 'text' });
   }
 
-  getPatients() {
-    return this.http.get<Patient[]>(`${this.base}/patients`);
+  getPatients(limit: number, offset: number) {
+    return this.http.get<Paginated<Patient>>(`${this.base}/patients`, {
+      params: { limit, offset },
+    });
   }
 
-  getHeartRateReadings() {
-    return this.http.get<HeartRateReading[]>(`${this.base}/heart-rate-readings`);
+  getHeartRateReadings(limit: number, offset: number) {
+    return this.http.get<Paginated<HeartRateReading>>(`${this.base}/heart-rate-readings`, {
+      params: { limit, offset },
+    });
   }
 
-  getHighHeartRateEvents() {
-    return this.http.get<HighHeartRateEvent[]>(`${this.base}/api/high-heart-rate-events`);
+  getHighHeartRateEvents(threshold: number, limit: number, offset: number) {
+    return this.http.get<Paginated<HighHeartRateEvent>>(`${this.base}/api/high-heart-rate-events`, {
+      params: { threshold, limit, offset },
+    });
   }
 
   getPatientAnalytics(id: number, from: string, to: string) {

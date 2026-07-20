@@ -4,23 +4,33 @@
     <mat-card-subtitle>GET /api/high-heart-rate-events</mat-card-subtitle>
   </mat-card-header>
   <mat-card-content>
+    <div class="fields">
+      <label>Threshold (bpm) <input type="number" [(ngModel)]="threshold" min="0" /></label>
+      <label>Limit <input type="number" [(ngModel)]="limit" min="1" max="100" /></label>
+    </div>
+
     @if (loading()) {
       <mat-spinner diameter="24" />
     } @else if (error()) {
-      <p>Request failed.</p>
-    } @else if (events().length) {
-      <ul>
-        @for (e of events(); track $index) {
-          <li>Patient {{ e.patientId }}: {{ e.heartRate }} bpm @ {{ e.timestamp }}</li>
-        }
-      </ul>
-    } @else if (loaded()) {
-      <p>No events above 100 bpm.</p>
+      <p class="error">{{ error() }}</p>
+    } @else if (page(); as p) {
+      @if (p.items.length) {
+        <ul>
+          @for (e of p.items; track $index) {
+            <li>Patient {{ e.patientId }}: {{ e.heartRate }} bpm @ {{ e.timestamp }}</li>
+          }
+        </ul>
+        <p class="page-state">offset {{ p.offset }}, showing {{ p.items.length }}@if (p.hasMore) {, more available}</p>
+      } @else {
+        <p>No events above {{ threshold }} bpm.</p>
+      }
     } @else {
       <p>No data loaded yet.</p>
     }
   </mat-card-content>
   <mat-card-actions>
-    <button mat-raised-button (click)="load()" [disabled]="loading()">Get high heart rate events</button>
+    <button mat-raised-button (click)="load()" [disabled]="loading()">Load events</button>
+    <button mat-button (click)="prev()" [disabled]="loading() || !page() || page()!.offset === 0">Prev</button>
+    <button mat-button (click)="next()" [disabled]="loading() || !page()?.hasMore">Next</button>
   </mat-card-actions>
 </mat-card>

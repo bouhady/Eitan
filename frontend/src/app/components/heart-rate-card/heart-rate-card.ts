@@ -1,33 +1,23 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../services/api.service';
 import { HeartRateReading } from '../../types/patient';
+import { PagedCard } from '../paged-card';
 
 @Component({
   selector: 'app-heart-rate-card',
-  imports: [MatCardModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [FormsModule, MatCardModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './heart-rate-card.html',
+  styleUrl: '../analytics-card/analytics-card.css',
 })
-export class HeartRateCard {
+export class HeartRateCard extends PagedCard<HeartRateReading> {
   private api = inject(ApiService);
-  protected readonly loading = signal(false);
-  protected readonly readings = signal<HeartRateReading[]>([]);
-  protected readonly error = signal(false);
+  protected override limit = 3; // small default so paging is visible on the seed data
 
-  load() {
-    this.loading.set(true);
-    this.error.set(false);
-    this.api.getHeartRateReadings().subscribe({
-      next: (rows) => {
-        this.readings.set(rows);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set(true);
-        this.loading.set(false);
-      },
-    });
+  protected fetch(limit: number, offset: number) {
+    return this.api.getHeartRateReadings(limit, offset);
   }
 }

@@ -22,3 +22,8 @@
 .error {
   color: #b00020;
 }
+
+.page-state {
+  font-size: 0.75rem;
+  color: #666;
+}

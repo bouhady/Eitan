@@ -18,6 +18,13 @@ docker compose up
 Everything runs in watch mode with source mounted — edit locally, containers reload.
 No local Node/Postgres install needed.
 
+To run **all verifications** (backend unit + e2e, frontend tests + production build) in
+one command:
+
+```bash
+./verify.sh
+```
+
 ## Backend (NestJS + TypeScript)
 
 ```
@@ -42,8 +49,8 @@ backend/src/
 
 Full spec with request/response shapes and error codes: [`docs/endpoints.md`](docs/endpoints.md).
 
-1. **High Heart Rate Events** — `GET /api/high-heart-rate-events`
-   All readings above 100 bpm (threshold is a named constant), filtered and ordered by SQL.
+1. **High Heart Rate Events** — `GET /api/high-heart-rate-events?threshold=`
+   All readings above the threshold (query param, default 100 bpm), filtered and ordered by SQL.
 2. **Heart Rate Analytics** — `GET /api/patient/:id/analytics?from=&to=`
    `COUNT/AVG/MIN/MAX` computed by Postgres aggregates, not in JS. Validates dates (`400`),
    unknown patient (`404`), empty range returns `count: 0` with nulls.

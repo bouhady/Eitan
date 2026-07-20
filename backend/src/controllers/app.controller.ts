@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from '../services/app.service';
 import { DbService } from '../db/db.service';
-import { parsePagination } from './pagination';
+import { paginate, parsePagination } from './pagination';
 
 @Controller()
 export class AppController {
@@ -22,14 +22,17 @@ export class AppController {
   }
 
   @Get('patients')
-  getPatients(@Query('limit') limit?: string, @Query('offset') offset?: string) {
+  async getPatients(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     const p = parsePagination(limit, offset);
-    return this.db.getPatients(p.limit, p.offset);
+    // fetch limit+1 rows so the envelope can report hasMore
+    const rows = await this.db.getPatients(p.limit + 1, p.offset);
+    return paginate(rows, p.limit, p.offset);
   }
 
   @Get('heart-rate-readings')
-  getHeartRateReadings(@Query('limit') limit?: string, @Query('offset') offset?: string) {
+  async getHeartRateReadings(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     const p = parsePagination(limit, offset);
-    return this.db.getHeartRateReadings(p.limit, p.offset);
+    const rows = await this.db.getHeartRateReadings(p.limit + 1, p.offset);
+    return paginate(rows, p.limit, p.offset);
   }
 }

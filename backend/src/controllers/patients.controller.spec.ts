@@ -36,6 +36,8 @@ describe('PatientsController', () => {
       ['missing to', FROM, ''],
       ['invalid from', 'not-a-date', TO],
       ['invalid to', FROM, 'not-a-date'],
+      ['non-ISO from (US format)', '03/01/2024', TO],
+      ['non-ISO from (verbose)', 'March 1, 2024', TO],
       ['from after to', TO, FROM],
       ['range longer than 365 days', '2023-01-01T00:00:00Z', '2024-06-01T00:00:00Z'],
     ])('rejects %s with 400 and does not emit', async (_name, from, to) => {
@@ -79,27 +81,32 @@ describe('PatientsController', () => {
   describe('getHighHeartRateEvents', () => {
     const rows = [{ patientId: 1, timestamp: 't', heartRate: 101 }];
 
-    it('uses default threshold 100 and default pagination', async () => {
+    it('uses default threshold 100 and returns the pagination envelope', async () => {
       db.getHighHeartRateEvents.mockResolvedValue(rows);
-      await expect(controller.getHighHeartRateEvents()).resolves.toEqual(rows);
-      expect(db.getHighHeartRateEvents).toHaveBeenCalledWith(100, 25, 0);
+      await expect(controller.getHighHeartRateEvents()).resolves.toEqual({
+        items: rows,
+        limit: 25,
+        offset: 0,
+        hasMore: false,
+      });
+      expect(db.getHighHeartRateEvents).toHaveBeenCalledWith(100, 26, 0);
     });
 
     it('passes a custom threshold and pagination through', async () => {
       db.getHighHeartRateEvents.mockResolvedValue(rows);
       await controller.getHighHeartRateEvents('110', '10', '5');
-      expect(db.getHighHeartRateEvents).toHaveBeenCalledWith(110, 10, 5);
+      expect(db.getHighHeartRateEvents).toHaveBeenCalledWith(110, 11, 5);
     });
 
     it.each([
       ['non-numeric threshold', 'abc'],
       ['negative threshold', '-1'],
-    ])('rejects %s with 400', (_name, threshold) => {
-      expect(() => controller.getHighHeartRateEvents(threshold)).toThrow(BadRequestException);
+    ])('rejects %s with 400', async (_name, threshold) => {
+      await expect(controller.getHighHeartRateEvents(threshold)).rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('rejects invalid pagination with 400', () => {
-      expect(() => controller.getHighHeartRateEvents('100', '101')).toThrow(BadRequestException);
+    it('rejects invalid pagination with 400', async () => {
+      await expect(controller.getHighHeartRateEvents('100', '101')).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 });
