@@ -87,6 +87,45 @@ A minimal dev UI: one card per endpoint (patients, readings, high-heart-rate eve
 analytics with id/date inputs, request tracking), each showing loading, data, and error
 states. Structured as `components/`, `services/` (one typed `ApiService`), `types/`.
 
+## Thought process
+
+How this project was built, in the order it actually happened:
+
+1. **Walking skeleton first.** Three folders — `frontend/` (Angular), `backend/` (NestJS),
+   `db/` (the provided seed JSON) — plus a docker-compose that runs everything with one
+   command. Before writing any feature, the whole stack had to run.
+2. **Prove the wire.** A `/ping` endpoint and a single frontend button with a loading
+   spinner and snackbar — the smallest possible end-to-end round trip (plus a mock 2s
+   delay to make the loading state real). Angular Material came in here for consistent UI.
+3. **Real data layer.** Postgres joined the compose stack, `init.sql` seeds the two core
+   tables from the provided JSON, and a thin `DbService` (raw `pg`, parameterized SQL)
+   exposed `SELECT`s — first as plain `/patients` and `/heart-rate-readings` endpoints,
+   each with a UI card to exercise it.
+4. **Structure before features.** With working plumbing, both projects were reorganized
+   into intention-revealing folders (`controllers/`, `services/`, `db/`, `types/`,
+   `middleware/` — mirrored by `components/`, `services/`, `types/` in the frontend) so
+   the actual assignment features would land in clean places.
+5. **Assignment endpoints.** High-heart-rate events and per-patient analytics — SQL does
+   the filtering/aggregation, controllers only validate and map errors (`400`/`404`).
+   Spec written down in `docs/endpoints.md` before implementing.
+6. **Event-driven tracking.** The third requirement was deliberately decoupled: analytics
+   emits an event, an async listener upserts the counter — a tracking failure can never
+   break the request path.
+7. **Tests, then CI.** Unit tests around the branching logic (validation, error mapping,
+   the emit contract, the listener's never-throw guarantee) with mocked dependencies;
+   e2e against a real seeded Postgres; GitHub Actions running both plus the production
+   build on every push. The e2e suite caught a real bug (`BIGINT` arriving as a string).
+8. **Hardening pass.** A structured self-review produced a prioritized fix list, applied
+   in waves: pagination with limits, parametric threshold, range validation, indexes,
+   explicit columns; then time-partitioning, schema constraints, bigint-safe counts, a
+   365-day range cap; finally observability (latency logs, slow-query logs, statement
+   timeout). Cursor pagination was implemented, evaluated, and consciously rolled back —
+   for this dataset offset is sufficient, so it lives below as a suggested improvement
+   rather than as unneeded complexity.
+
+The guiding rule throughout: smallest thing that works, verified end-to-end at every
+step, structure and hardening added when there was something real to protect.
+
 ## Suggested improvements (given more time)
 
 - Config via `.env` (DB credentials) instead of hardcoded compose values
