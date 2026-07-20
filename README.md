@@ -25,6 +25,35 @@ one command:
 ./verify.sh
 ```
 
+### Quick test — example curl commands
+
+```bash
+# health / hello
+curl http://localhost:3000
+
+# patients (paginated: { items, limit, offset, hasMore })
+curl "http://localhost:3000/patients"
+curl "http://localhost:3000/patients?limit=1&offset=1"
+
+# heart rate readings
+curl "http://localhost:3000/heart-rate-readings?limit=3"
+
+# 1) high heart rate events (default threshold 100)
+curl "http://localhost:3000/api/high-heart-rate-events"
+curl "http://localhost:3000/api/high-heart-rate-events?threshold=102"
+
+# 2) analytics per patient in a time range (avg / min / max / count)
+curl "http://localhost:3000/api/patient/1/analytics?from=2024-03-01T00:00:00Z&to=2024-03-03T00:00:00Z"
+
+# 3) request tracking (counts analytics requests; run the analytics call above first)
+curl "http://localhost:3000/api/patient/1/tracking"
+
+# error handling examples
+curl "http://localhost:3000/api/patient/999/analytics?from=2024-03-01T00:00:00Z&to=2024-03-03T00:00:00Z"  # 404 unknown patient
+curl "http://localhost:3000/api/patient/1/analytics?from=03/01/2024&to=2024-03-03T00:00:00Z"              # 400 non-ISO date
+curl "http://localhost:3000/patients?limit=101"                                                            # 400 limit above max
+```
+
 ## Backend (NestJS + TypeScript)
 
 ```
