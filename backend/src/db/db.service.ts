@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { Pool } from 'pg';
 import { Patient, HeartRateReading, HighHeartRateEvent, PatientRequestTracking } from '../types/patient';
 
 export const HIGH_HEART_RATE_THRESHOLD = 100;
 
 @Injectable()
-export class DbService {
+export class DbService implements OnModuleDestroy {
   private pool = new Pool(); // reads PGHOST/PGUSER/PGPASSWORD/PGDATABASE from env
+
+  onModuleDestroy() {
+    return this.pool.end(); // lets jest/e2e and graceful shutdown close cleanly
+  }
 
   async getPatients(): Promise<Patient[]> {
     const { rows } = await this.pool.query('SELECT * FROM patients');
