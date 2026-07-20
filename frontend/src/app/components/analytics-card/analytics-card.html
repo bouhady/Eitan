@@ -1,0 +1,29 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Heart Rate Analytics</mat-card-title>
+    <mat-card-subtitle>GET /api/patient/:id/analytics?from=&to=</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="fields">
+      <label>Patient id <input type="number" [(ngModel)]="patientId" min="1" /></label>
+      <label>From <input type="datetime-local" [(ngModel)]="from" /></label>
+      <label>To <input type="datetime-local" [(ngModel)]="to" /></label>
+    </div>
+
+    @if (loading()) {
+      <mat-spinner diameter="24" />
+    } @else if (error()) {
+      <p class="error">{{ error() }}</p>
+    } @else if (result(); as r) {
+      <p>
+        Readings: {{ r.count }}
+        @if (r.count > 0) {
+          — avg {{ r.avg | number: '1.0-1' }}, min {{ r.min }}, max {{ r.max }} bpm
+        }
+      </p>
+    }
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-raised-button (click)="load()" [disabled]="loading()">Get analytics</button>
+  </mat-card-actions>
+</mat-card>

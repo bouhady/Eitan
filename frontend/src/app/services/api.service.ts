@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Patient, HeartRateReading } from '../types/patient';
+import { Patient, HeartRateReading, HighHeartRateEvent, HeartRateAnalytics } from '../types/patient';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -17,5 +17,15 @@ export class ApiService {
 
   getHeartRateReadings() {
     return this.http.get<HeartRateReading[]>(`${this.base}/heart-rate-readings`);
+  }
+
+  getHighHeartRateEvents() {
+    return this.http.get<HighHeartRateEvent[]>(`${this.base}/api/high-heart-rate-events`);
+  }
+
+  getPatientAnalytics(id: number, from: string, to: string) {
+    return this.http.get<HeartRateAnalytics>(`${this.base}/api/patient/${id}/analytics`, {
+      params: { from, to },
+    });
   }
 }

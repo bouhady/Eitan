@@ -1,0 +1,26 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>High Heart Rate Events</mat-card-title>
+    <mat-card-subtitle>GET /api/high-heart-rate-events</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    @if (loading()) {
+      <mat-spinner diameter="24" />
+    } @else if (error()) {
+      <p>Request failed.</p>
+    } @else if (events().length) {
+      <ul>
+        @for (e of events(); track $index) {
+          <li>Patient {{ e.patientId }}: {{ e.heartRate }} bpm @ {{ e.timestamp }}</li>
+        }
+      </ul>
+    } @else if (loaded()) {
+      <p>No events above 100 bpm.</p>
+    } @else {
+      <p>No data loaded yet.</p>
+    }
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-raised-button (click)="load()" [disabled]="loading()">Get high heart rate events</button>
+  </mat-card-actions>
+</mat-card>
