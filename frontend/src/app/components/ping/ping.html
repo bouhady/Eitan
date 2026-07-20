@@ -1,0 +1,7 @@
+<button mat-raised-button (click)="ping()" [disabled]="loading()">
+  @if (loading()) {
+    <mat-spinner diameter="18" />
+  } @else {
+    Ping backend
+  }
+</button>

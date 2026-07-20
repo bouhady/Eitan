@@ -1,0 +1,24 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Heart Rate Readings</mat-card-title>
+    <mat-card-subtitle>GET /heart-rate-readings</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    @if (loading()) {
+      <mat-spinner diameter="24" />
+    } @else if (error()) {
+      <p>Request failed.</p>
+    } @else if (readings().length) {
+      <ul>
+        @for (r of readings(); track r.id) {
+          <li>Patient {{ r.patientId }}: {{ r.heartRate }} bpm @ {{ r.timestamp }}</li>
+        }
+      </ul>
+    } @else {
+      <p>No data loaded yet.</p>
+    }
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-raised-button (click)="load()" [disabled]="loading()">Get heart rate readings</button>
+  </mat-card-actions>
+</mat-card>

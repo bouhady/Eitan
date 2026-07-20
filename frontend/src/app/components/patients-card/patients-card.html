@@ -1,0 +1,24 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Patients</mat-card-title>
+    <mat-card-subtitle>GET /patients</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    @if (loading()) {
+      <mat-spinner diameter="24" />
+    } @else if (error()) {
+      <p>Request failed.</p>
+    } @else if (patients().length) {
+      <ul>
+        @for (p of patients(); track p.id) {
+          <li>{{ p.name }} — age {{ p.age }}, {{ p.gender }}</li>
+        }
+      </ul>
+    } @else {
+      <p>No data loaded yet.</p>
+    }
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-raised-button (click)="load()" [disabled]="loading()">Get all patients</button>
+  </mat-card-actions>
+</mat-card>

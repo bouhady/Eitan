@@ -1,9 +1,7 @@
 <h1>Hello World</h1>
+<app-ping />
 
-<button mat-raised-button (click)="ping()" [disabled]="loading()">
-  @if (loading()) {
-    <mat-spinner diameter="18" />
-  } @else {
-    Ping backend
-  }
-</button>
+<div class="cards">
+  <app-patients-card />
+  <app-heart-rate-card />
+</div>

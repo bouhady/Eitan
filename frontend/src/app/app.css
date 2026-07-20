@@ -2,3 +2,15 @@
   display: block;
   padding: 1.5rem;
 }
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.cards > * {
+  flex: 1 1 320px;
+  max-width: 480px;
+}
