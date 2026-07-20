@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Patient, HeartRateReading, HighHeartRateEvent, HeartRateAnalytics, PatientRequestTracking } from '../types/patient';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:3000'; // ponytail: hardcoded dev URL, move to environment when deployed
+  private base = environment.apiBase;
 
   ping() {
     return this.http.get(`${this.base}/ping`, { responseType: 'text' });

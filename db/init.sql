@@ -15,6 +15,10 @@ CREATE TABLE "heartRateReadings" (
   "heartRate" INT
 );
 
+-- covers analytics (patient + time range) and high-heart-rate (threshold + order) queries
+CREATE INDEX idx_hrr_patient_timestamp ON "heartRateReadings" ("patientId", timestamp);
+CREATE INDEX idx_hrr_rate_timestamp ON "heartRateReadings" ("heartRate", timestamp);
+
 -- request tracking (assignment endpoint 3), updated async via NestJS EventEmitter
 CREATE TABLE "patientRequestsAnalytics" (
   "patientId"       INT PRIMARY KEY REFERENCES patients(id),

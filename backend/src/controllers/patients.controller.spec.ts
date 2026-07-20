@@ -36,6 +36,7 @@ describe('PatientsController', () => {
       ['missing to', FROM, ''],
       ['invalid from', 'not-a-date', TO],
       ['invalid to', FROM, 'not-a-date'],
+      ['from after to', TO, FROM],
     ])('rejects %s with 400 and does not emit', async (_name, from, to) => {
       await expect(controller.getAnalytics(1, from, to)).rejects.toBeInstanceOf(BadRequestException);
       expect(events.emit).not.toHaveBeenCalled();
@@ -74,9 +75,30 @@ describe('PatientsController', () => {
     });
   });
 
-  it('getHighHeartRateEvents passes through db rows', async () => {
+  describe('getHighHeartRateEvents', () => {
     const rows = [{ patientId: 1, timestamp: 't', heartRate: 101 }];
-    db.getHighHeartRateEvents.mockResolvedValue(rows);
-    await expect(controller.getHighHeartRateEvents()).resolves.toEqual(rows);
+
+    it('uses default threshold 100 and default pagination', async () => {
+      db.getHighHeartRateEvents.mockResolvedValue(rows);
+      await expect(controller.getHighHeartRateEvents()).resolves.toEqual(rows);
+      expect(db.getHighHeartRateEvents).toHaveBeenCalledWith(100, 25, 0);
+    });
+
+    it('passes a custom threshold and pagination through', async () => {
+      db.getHighHeartRateEvents.mockResolvedValue(rows);
+      await controller.getHighHeartRateEvents('110', '10', '5');
+      expect(db.getHighHeartRateEvents).toHaveBeenCalledWith(110, 10, 5);
+    });
+
+    it.each([
+      ['non-numeric threshold', 'abc'],
+      ['negative threshold', '-1'],
+    ])('rejects %s with 400', (_name, threshold) => {
+      expect(() => controller.getHighHeartRateEvents(threshold)).toThrow(BadRequestException);
+    });
+
+    it('rejects invalid pagination with 400', () => {
+      expect(() => controller.getHighHeartRateEvents('100', '101')).toThrow(BadRequestException);
+    });
   });
 });

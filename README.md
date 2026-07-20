@@ -48,7 +48,8 @@ Full spec with request/response shapes and error codes: [`docs/endpoints.md`](do
    `COUNT/AVG/MIN/MAX` computed by Postgres aggregates, not in JS. Validates dates (`400`),
    unknown patient (`404`), empty range returns `count: 0` with nulls.
 3. **Patient Request Tracking** — `GET /api/patient/:id/tracking`
-   Every analytics request emits a `patient.analytics.requested` event (NestJS EventEmitter);
+   Counts **analytics requests only** (not other endpoints): every call to
+   `/api/patient/:id/analytics` emits a `patient.analytics.requested` event (NestJS EventEmitter);
    `TrackingService` handles it **asynchronously** and upserts a counter row — tracking never
    blocks or fails the request path. This endpoint reads the counter back.
 
@@ -85,8 +86,9 @@ states. Structured as `components/`, `services/` (one typed `ApiService`), `type
 
 ## Suggested improvements (given more time)
 
-- Config via `.env` (DB credentials, API base URL) instead of hardcoded dev values
-- Integration tests against a test database; e2e happy-path per endpoint
+- Config via `.env` (DB credentials) instead of hardcoded compose values
 - Migrations (e.g. node-pg-migrate) instead of a single init.sql
-- Pagination + indexes on `heartRateReadings("patientId", timestamp)` for large datasets
+- Cursor pagination + time-partitioning of `heartRateReadings` at real scale;
+  a real queue (Redis/Kafka) instead of in-process events for tracking under load
+- Max date-range cap on analytics; schema CHECK constraints; slow-query logging
 - Production Dockerfiles (multi-stage build, nginx for the frontend)

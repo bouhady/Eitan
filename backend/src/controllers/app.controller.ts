@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from '../services/app.service';
 import { DbService } from '../db/db.service';
+import { parsePagination } from './pagination';
 
 @Controller()
 export class AppController {
@@ -21,12 +22,14 @@ export class AppController {
   }
 
   @Get('patients')
-  getPatients() {
-    return this.db.getPatients();
+  getPatients(@Query('limit') limit?: string, @Query('offset') offset?: string) {
+    const p = parsePagination(limit, offset);
+    return this.db.getPatients(p.limit, p.offset);
   }
 
   @Get('heart-rate-readings')
-  getHeartRateReadings() {
-    return this.db.getHeartRateReadings();
+  getHeartRateReadings(@Query('limit') limit?: string, @Query('offset') offset?: string) {
+    const p = parsePagination(limit, offset);
+    return this.db.getHeartRateReadings(p.limit, p.offset);
   }
 }

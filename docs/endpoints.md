@@ -3,13 +3,26 @@
 Assignment endpoints, implemented in `backend/src/controllers/patients.controller.ts`
 with SQL in `backend/src/db/db.service.ts` (Postgres does the filtering/aggregation).
 
+## Pagination
+
+List endpoints (`/patients`, `/heart-rate-readings`, `/api/high-heart-rate-events`) accept:
+
+| Param    | Default | Constraints                  |
+|----------|---------|------------------------------|
+| `limit`  | 25      | integer, 1–100               |
+| `offset` | 0       | non-negative integer         |
+
+Invalid values → `400`. Ordering is stable (`timestamp, id`).
+
 ## 1. High Heart Rate Events
 
-All heart rate readings exceeding **100 bpm**, across all patients, ordered by timestamp.
+All heart rate readings exceeding the threshold (default **100 bpm**), across all patients.
 
 ```
-GET /api/high-heart-rate-events
+GET /api/high-heart-rate-events?threshold=100&limit=25&offset=0
 ```
+
+`threshold` is optional (default 100); non-numeric or negative → `400`.
 
 **Response `200`**
 

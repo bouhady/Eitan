@@ -12,13 +12,19 @@ export class DbService implements OnModuleDestroy {
     return this.pool.end(); // lets jest/e2e and graceful shutdown close cleanly
   }
 
-  async getPatients(): Promise<Patient[]> {
-    const { rows } = await this.pool.query('SELECT * FROM patients');
+  async getPatients(limit: number, offset: number): Promise<Patient[]> {
+    const { rows } = await this.pool.query(
+      'SELECT id, name, age, gender FROM patients ORDER BY id LIMIT $1 OFFSET $2',
+      [limit, offset],
+    );
     return rows as Patient[];
   }
 
-  async getHeartRateReadings(): Promise<HeartRateReading[]> {
-    const { rows } = await this.pool.query('SELECT * FROM "heartRateReadings"');
+  async getHeartRateReadings(limit: number, offset: number): Promise<HeartRateReading[]> {
+    const { rows } = await this.pool.query(
+      'SELECT id, "patientId", timestamp, "heartRate" FROM "heartRateReadings" ORDER BY timestamp, id LIMIT $1 OFFSET $2',
+      [limit, offset],
+    );
     return rows as HeartRateReading[];
   }
 
@@ -27,10 +33,15 @@ export class DbService implements OnModuleDestroy {
     return (rowCount ?? 0) > 0;
   }
 
-  async getHighHeartRateEvents(): Promise<HighHeartRateEvent[]> {
+  async getHighHeartRateEvents(
+    threshold: number,
+    limit: number,
+    offset: number,
+  ): Promise<HighHeartRateEvent[]> {
     const { rows } = await this.pool.query(
-      'SELECT "patientId", timestamp, "heartRate" FROM "heartRateReadings" WHERE "heartRate" > $1 ORDER BY timestamp',
-      [HIGH_HEART_RATE_THRESHOLD],
+      // ORDER BY timestamp, id keeps paging stable when timestamps collide
+      'SELECT "patientId", timestamp, "heartRate" FROM "heartRateReadings" WHERE "heartRate" > $1 ORDER BY timestamp, id LIMIT $2 OFFSET $3',
+      [threshold, limit, offset],
     );
     return rows as HighHeartRateEvent[];
   }
