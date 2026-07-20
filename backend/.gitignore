@@ -1,0 +1,12 @@
+# compiled output
+/dist
+/node_modules
+
+# logs
+*.log
+
+# OS / editor
+.DS_Store
+
+# env
+.env
