@@ -13,6 +13,8 @@ import { PATIENT_ANALYTICS_REQUESTED } from '../services/tracking.service';
 import { HeartRateAnalytics, HighHeartRateEvent, PatientRequestTracking } from '../types/patient';
 import { parsePagination } from './pagination';
 
+export const MAX_ANALYTICS_RANGE_DAYS = 365;
+
 @Controller('api')
 export class PatientsController {
   constructor(
@@ -45,6 +47,10 @@ export class PatientsController {
     }
     if (Date.parse(from) > Date.parse(to)) {
       throw new BadRequestException('from must be earlier than or equal to to');
+    }
+    // guardrail against unbounded scans on a large readings table
+    if (Date.parse(to) - Date.parse(from) > MAX_ANALYTICS_RANGE_DAYS * 24 * 60 * 60 * 1000) {
+      throw new BadRequestException(`date range must not exceed ${MAX_ANALYTICS_RANGE_DAYS} days`);
     }
     if (!(await this.db.patientExists(id))) {
       throw new NotFoundException(`patient ${id} not found`);

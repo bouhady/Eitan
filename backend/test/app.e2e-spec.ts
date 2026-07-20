@@ -85,6 +85,13 @@ describe('App (e2e)', () => {
     expect(res.body).toHaveLength(2);
   });
 
+  it('/api/patient/1/analytics rejects a range longer than 365 days with 400', () => {
+    return request(app.getHttpServer())
+      .get('/api/patient/1/analytics')
+      .query({ from: '2023-01-01T00:00:00Z', to: '2024-06-01T00:00:00Z' })
+      .expect(400);
+  });
+
   it('/api/patient/1/analytics rejects from > to with 400', () => {
     return request(app.getHttpServer())
       .get('/api/patient/1/analytics')

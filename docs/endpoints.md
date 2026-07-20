@@ -69,7 +69,7 @@ No readings in range → `count: 0` and `avg`/`min`/`max` are `null`.
 
 | Status | When                                        |
 |--------|---------------------------------------------|
-| `400`  | Non-numeric `id`, missing or invalid `from`/`to` |
+| `400`  | Non-numeric `id`, missing or invalid `from`/`to`, `from > to`, or range longer than 365 days |
 | `404`  | Patient id does not exist                   |
 
 ## 3. Patient Request Tracking

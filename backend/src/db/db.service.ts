@@ -48,7 +48,7 @@ export class DbService implements OnModuleDestroy {
 
   async getPatientAnalytics(id: number, from: string, to: string) {
     const { rows } = await this.pool.query(
-      `SELECT COUNT(*)::int AS count,
+      `SELECT COUNT(*) AS count,
               AVG("heartRate")::float AS avg,
               MIN("heartRate") AS min,
               MAX("heartRate") AS max
@@ -56,7 +56,10 @@ export class DbService implements OnModuleDestroy {
        WHERE "patientId" = $1 AND timestamp BETWEEN $2 AND $3`,
       [id, from, to],
     );
-    return rows[0] as { count: number; avg: number | null; min: number | null; max: number | null };
+    const r = rows[0] as { count: string; avg: number | null; min: number | null; max: number | null };
+    // COUNT(*) is bigint (pg returns it as string); Number() is exact up to 2^53 rows,
+    // unlike the previous ::int cast which would overflow past ~2.1B
+    return { count: Number(r.count), avg: r.avg, min: r.min, max: r.max };
   }
 
   async trackPatientRequest(id: number): Promise<void> {
@@ -75,6 +78,9 @@ export class DbService implements OnModuleDestroy {
       'SELECT "patientId", "requestCount", "lastRequestedAt" FROM "patientRequestsAnalytics" WHERE "patientId" = $1',
       [id],
     );
-    return (rows[0] as PatientRequestTracking) ?? { patientId: id, requestCount: 0, lastRequestedAt: null };
+    if (!rows[0]) return { patientId: id, requestCount: 0, lastRequestedAt: null };
+    const r = rows[0] as { patientId: number; requestCount: string; lastRequestedAt: string | null };
+    // requestCount is BIGINT (pg returns string); Number() is exact up to 2^53
+    return { patientId: r.patientId, requestCount: Number(r.requestCount), lastRequestedAt: r.lastRequestedAt };
   }
 }

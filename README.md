@@ -73,8 +73,8 @@ Full spec with request/response shapes and error codes: [`docs/endpoints.md`](do
 | Table                      | Purpose                                          |
 |----------------------------|--------------------------------------------------|
 | `patients`                 | profile data (seeded from `db/patients.json`)    |
-| `heartRateReadings`        | timestamped readings, FK → patients              |
-| `patientRequestsAnalytics` | per-patient request counter + last-requested-at  |
+| `heartRateReadings`        | timestamped readings, FK → patients — **partitioned by time range** (yearly + DEFAULT catch-all), `NOT NULL` + `CHECK (0 < heartRate <= 300)` constraints |
+| `patientRequestsAnalytics` | per-patient `BIGINT` request counter + last-requested-at |
 
 Data persists in the named `pgdata` volume; `docker compose down -v` resets to a fresh seed.
 
@@ -88,7 +88,7 @@ states. Structured as `components/`, `services/` (one typed `ApiService`), `type
 
 - Config via `.env` (DB credentials) instead of hardcoded compose values
 - Migrations (e.g. node-pg-migrate) instead of a single init.sql
-- Cursor pagination + time-partitioning of `heartRateReadings` at real scale;
-  a real queue (Redis/Kafka) instead of in-process events for tracking under load
-- Max date-range cap on analytics; schema CHECK constraints; slow-query logging
+- Cursor pagination at deep offsets; partition automation (pg_partman) instead of the
+  manual yearly partition; a real queue (Redis/Kafka) instead of in-process events
+- Slow-query logging / statement timeouts / EXPLAIN ANALYZE in observability
 - Production Dockerfiles (multi-stage build, nginx for the frontend)

@@ -37,6 +37,7 @@ describe('PatientsController', () => {
       ['invalid from', 'not-a-date', TO],
       ['invalid to', FROM, 'not-a-date'],
       ['from after to', TO, FROM],
+      ['range longer than 365 days', '2023-01-01T00:00:00Z', '2024-06-01T00:00:00Z'],
     ])('rejects %s with 400 and does not emit', async (_name, from, to) => {
       await expect(controller.getAnalytics(1, from, to)).rejects.toBeInstanceOf(BadRequestException);
       expect(events.emit).not.toHaveBeenCalled();
