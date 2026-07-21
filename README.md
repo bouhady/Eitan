@@ -180,6 +180,9 @@ step, structure and hardening added when there was something real to protect.
   any depth on the existing indexes
 - Migrations (e.g. node-pg-migrate) instead of a single init.sql
 - Partition automation (pg_partman) instead of the manual yearly partition
+- Replace the manual `pg.Pool` in `PoolService` with an external connection pooler such as
+  **AWS RDS Proxy** (or PgBouncer): connection multiplexing and failover handled outside the
+  app — `PoolService` is already the single seam, so this is mostly a config/endpoint swap
 - A dedicated analytics/audit service fed by a **Kafka/RabbitMQ** message queue instead of
   the in-process `EventEmitter`: the API would publish request events to the broker and a
   separate consumer would persist tracking/audit data — durable across restarts, decoupled
