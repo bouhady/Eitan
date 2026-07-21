@@ -1,13 +1,13 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from '../services/app.service';
-import { DbService } from '../db/db.service';
-import { paginate, parsePagination } from './pagination';
+import { PatientsService } from '../services/patients.service';
+import { PaginationDto } from '../dto/pagination.dto';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private readonly db: DbService,
+    private readonly patients: PatientsService,
   ) {}
 
   @Get()
@@ -22,17 +22,12 @@ export class AppController {
   }
 
   @Get('patients')
-  async getPatients(@Query('limit') limit?: string, @Query('offset') offset?: string) {
-    const p = parsePagination(limit, offset);
-    // fetch limit+1 rows so the envelope can report hasMore
-    const rows = await this.db.getPatients(p.limit + 1, p.offset);
-    return paginate(rows, p.limit, p.offset);
+  getPatients(@Query() query: PaginationDto) {
+    return this.patients.getPatients(query);
   }
 
   @Get('heart-rate-readings')
-  async getHeartRateReadings(@Query('limit') limit?: string, @Query('offset') offset?: string) {
-    const p = parsePagination(limit, offset);
-    const rows = await this.db.getHeartRateReadings(p.limit + 1, p.offset);
-    return paginate(rows, p.limit, p.offset);
+  getHeartRateReadings(@Query() query: PaginationDto) {
+    return this.patients.getHeartRateReadings(query);
   }
 }

@@ -1,3 +1,10 @@
+export interface Paginated<T> {
+  items: T[];
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
 export interface Patient {
   id: number;
   name: string;

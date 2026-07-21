@@ -59,17 +59,22 @@ curl "http://localhost:3000/patients?limit=101"                                 
 ```
 backend/src/
   main.ts                       bootstrap (CORS enabled for the dev UI)
-  app.module.ts                 wiring: controllers, providers, EventEmitterModule, middleware
-  controllers/
-    app.controller.ts           hello + /ping (mock 2s delay)
+  app.module.ts                 wiring: controllers, providers, global ValidationPipe, middleware
+  controllers/                  thin HTTP layer: DTO in, service call, response out
+    app.controller.ts           hello + /ping (mock 2s delay) + list endpoints
     patients.controller.ts      the assignment endpoints (under /api)
+  dto/                          query contracts, validated by class-validator
+    pagination.dto.ts           limit (1-100, default 25) + offset
+    high-heart-rate-events-query.dto.ts   + threshold (int 1-300, default 100)
+    patient-analytics-query.dto.ts        from/to as strict ISO 8601
   services/
     app.service.ts
+    patients.service.ts         use-case layer: business validation + orchestration
     tracking.service.ts         async event listener for request tracking
   db/
-    db.service.ts               single data-access point: pg Pool + parameterized SQL
+    db.service.ts               data access only: pg Pool + parameterized SQL
   middleware/
-    logger.middleware.ts        logs every request
+    logger.middleware.ts        logs every request with status + latency
   types/
     patient.ts                  shared interfaces (Patient, readings, analytics, tracking)
 ```
@@ -98,8 +103,12 @@ Full spec with request/response shapes and error codes: [`docs/endpoints.md`](do
   TypeORM/Prisma; `DbService` is the single seam where an ORM could later slot in.
 - **Event-driven tracking** decouples the side effect from the request path: the analytics
   handler emits and returns; the listener catches and logs its own failures.
-- **Validation at the boundary**: `ParseIntPipe` for ids, explicit ISO-date checks for the
-  range — bad input fails fast with a clear `400`.
+- **Layered: controller → service → data access.** Controllers are a thin HTTP layer;
+  `PatientsService` owns each use case (business rules, existence checks, event emission,
+  response shaping); `DbService` is SQL only.
+- **Two kinds of validation, two places.** Shape validation (types, ranges, ISO format)
+  lives in DTOs enforced by a global `ValidationPipe`; business validation (`from <= to`,
+  the 365-day cap, patient existence) lives in the service.
 - **Observability**: every request logged with status + latency; queries slower than
   200ms warned app-side and logged db-side (`log_min_duration_statement`); 5s
   `statement_timeout` on the pool; `db/explain.sql` for checking plans.

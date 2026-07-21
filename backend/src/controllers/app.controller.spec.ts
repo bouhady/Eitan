@@ -1,21 +1,20 @@
-import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from '../services/app.service';
-import { DbService } from '../db/db.service';
+import { PatientsService } from '../services/patients.service';
 
 describe('AppController', () => {
   let appController: AppController;
-  const db = {
-    getPatients: jest.fn().mockResolvedValue([]),
-    getHeartRateReadings: jest.fn().mockResolvedValue([]),
+  const patients = {
+    getPatients: jest.fn(),
+    getHeartRateReadings: jest.fn(),
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService, { provide: DbService, useValue: db }],
+      providers: [AppService, { provide: PatientsService, useValue: patients }],
     }).compile();
 
     appController = app.get<AppController>(AppController);
@@ -25,33 +24,15 @@ describe('AppController', () => {
     expect(appController.getHello()).toBe('Patients & Heart Rate Service');
   });
 
-  describe('pagination', () => {
-    it('defaults to limit 25 offset 0 (fetches limit+1 for hasMore)', async () => {
-      const res = await appController.getPatients();
-      expect(db.getPatients).toHaveBeenCalledWith(26, 0);
-      expect(res).toEqual({ items: [], limit: 25, offset: 0, hasMore: false });
-    });
+  it('delegates patients listing to the service', () => {
+    const query = { limit: 25, offset: 0 };
+    appController.getPatients(query);
+    expect(patients.getPatients).toHaveBeenCalledWith(query);
+  });
 
-    it('passes custom limit and offset through', async () => {
-      await appController.getHeartRateReadings('10', '5');
-      expect(db.getHeartRateReadings).toHaveBeenCalledWith(11, 5);
-    });
-
-    it('sets hasMore and trims the extra row when more rows exist', async () => {
-      db.getPatients.mockResolvedValue([{ id: 1 }, { id: 2 }, { id: 3 }]);
-      const res = await appController.getPatients('2');
-      expect(res.items).toHaveLength(2);
-      expect(res.hasMore).toBe(true);
-    });
-
-    it.each([
-      ['limit 0', '0', undefined],
-      ['limit above max', '101', undefined],
-      ['non-numeric limit', 'abc', undefined],
-      ['negative offset', '25', '-1'],
-      ['non-numeric offset', '25', 'abc'],
-    ])('rejects %s with 400', async (_name, limit, offset) => {
-      await expect(appController.getPatients(limit, offset)).rejects.toBeInstanceOf(BadRequestException);
-    });
+  it('delegates readings listing to the service', () => {
+    const query = { limit: 10, offset: 5 };
+    appController.getHeartRateReadings(query);
+    expect(patients.getHeartRateReadings).toHaveBeenCalledWith(query);
   });
 });
