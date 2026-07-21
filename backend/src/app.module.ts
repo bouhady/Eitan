@@ -7,6 +7,7 @@ import { AppService } from './services/app.service';
 import { PatientsService } from './services/patients.service';
 import { TrackingService } from './services/tracking.service';
 import { DbService } from './db/db.service';
+import { PoolService } from './db/pool.service';
 import { LoggerMiddleware } from './middleware/logger.middleware';
 
 @Module({
@@ -15,6 +16,7 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
   providers: [
     AppService,
     PatientsService,
+    PoolService,
     DbService,
     TrackingService,
     {

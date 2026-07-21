@@ -72,7 +72,8 @@ backend/src/
     patients.service.ts         use-case layer: business validation + orchestration
     tracking.service.ts         async event listener for request tracking
   db/
-    db.service.ts               data access only: pg Pool + parameterized SQL
+    pool.service.ts             connection/pooling seam (swap in PgBouncer/RDS Proxy here)
+    db.service.ts               data access only: parameterized SQL + row mapping
   middleware/
     logger.middleware.ts        logs every request with status + latency
   types/
