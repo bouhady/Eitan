@@ -179,7 +179,15 @@ step, structure and hardening added when there was something real to protect.
   past all skipped rows, while `WHERE (timestamp, id) > (last row)` stays O(limit) at
   any depth on the existing indexes
 - Migrations (e.g. node-pg-migrate) instead of a single init.sql
-- Partition automation (pg_partman) instead of the manual yearly partition;
-  a real queue (Redis/Kafka) instead of in-process events for tracking under load
+- Partition automation (pg_partman) instead of the manual yearly partition
+- A dedicated analytics/audit service fed by a **Kafka/RabbitMQ** message queue instead of
+  the in-process `EventEmitter`: the API would publish request events to the broker and a
+  separate consumer would persist tracking/audit data — durable across restarts, decoupled
+  from the request path, and horizontally scalable under load
+- Consider replacing bare Postgres with **TimescaleDB** for the time-series workload:
+  its hypertables give automatic timestamp-based sharding (chunks) for a large
+  `heartRateReadings` table, plus time-oriented features (continuous aggregates,
+  retention/compression policies) that fit the analytics queries — without the manual
+  partition management the current schema uses
 - Metrics/tracing (Prometheus, OpenTelemetry) beyond the current log-based observability
 - Production Dockerfiles (multi-stage build, nginx for the frontend)
